@@ -1,14 +1,8 @@
 package org.apiguard.rest.utils;
 
 import org.apiguard.commons.utils.DateTimeFormater;
-import org.apiguard.entity.Api;
-import org.apiguard.entity.BasicAuth;
-import org.apiguard.entity.Client;
-import org.apiguard.entity.KeyAuth;
-import org.apiguard.valueobject.ApiVo;
-import org.apiguard.valueobject.BasicAuthVo;
-import org.apiguard.valueobject.ClientVo;
-import org.apiguard.valueobject.KeyAuthVo;
+import org.apiguard.entity.*;
+import org.apiguard.valueobject.*;
 
 public class ObjectsConverter {
 
@@ -49,6 +43,16 @@ public class ObjectsConverter {
 
 		return new BasicAuthVo(domain.getId(), DateTimeFormater.toString(domain.getCreationDate()),
 				DateTimeFormater.toString(domain.getLastUpdateDate()), domain.getClientId(), "******",
+				domain.getReqUri());
+	}
+
+	public static SignatureAuthVo convertSignatureAuthDomainToValue(SignatureAuth domain) {
+		if (domain == null) {
+			return null;
+		}
+
+		return new SignatureAuthVo(domain.getId(), DateTimeFormater.toString(domain.getCreationDate()),
+				DateTimeFormater.toString(domain.getLastUpdateDate()), domain.getClientAlias(), domain.getClientId(), domain.getSecret(),
 				domain.getReqUri());
 	}
 
