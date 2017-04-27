@@ -15,6 +15,12 @@
  */
 package org.apiguard.rest.service;
 
+import org.junit.Test;
+
 public class AuthCheckerTest {
+
+    @Test
+    public void testBase64() {
+    }
 
 }
