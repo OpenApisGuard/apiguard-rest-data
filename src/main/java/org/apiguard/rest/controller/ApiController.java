@@ -59,22 +59,22 @@ public class ApiController extends BaseController {
 //	 return apis;
 //	 }
 
-	@RequestMapping(method = {RequestMethod.GET, RequestMethod.POST})
+	@RequestMapping(value = "/**")
 	@ResponseBody
 	public ResponseEntity forwardApi(HttpServletRequest req, HttpServletResponse res) throws Exception {
-		String reqUri = (String) req.getHeader("request_uri");
+		String reqUri = req.getServletPath().replaceFirst("/apis", "");
 		if (!isValid(reqUri)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Request uri is not provided.");
 		}
 
 		Api api = apiService.getApiByReqUri(reqUri);
 		if (api == null || api.getDownstreamUri().isEmpty()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(reqUri + " is not configured yet.");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request: " + reqUri);
 		}
 
 		// check whether api needs auth
 		try {
-			if (api.isAuthRequired() && ! authChecker.authenticate(reqUri, req)) {
+			if (api.isAuthRequired() && ! authChecker.authenticate(api.getReqUri(), req)) {
 				return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Your authentication credentials are invalid.");
 			}
 		}
@@ -100,31 +100,6 @@ public class ApiController extends BaseController {
 		else {
 			return new ResponseEntity<String>(getResponse(res, resp), responseHeaders, HttpStatus.OK);
 		}
-	}
-
-	@RequestMapping(value = "/{api}", method = {RequestMethod.GET, RequestMethod.POST})
-	public ResponseEntity forwardApi(@PathVariable("api") String apiName, HttpServletRequest req,
-			HttpServletResponse res) throws Exception {
-		if (!isValid(apiName)) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo("Request uri is not provided."));
-		}
-
-		Api api = apiService.getApiByName(apiName);
-		if (api == null || api.getDownstreamUri().isEmpty()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo("Api name: " + apiName + " is not configured."));
-		}
-
-		// check whether api needs auth
-		try {
-			if (api.isAuthRequired() && !authChecker.authenticate(api.getReqUri(), req)) {
-				return ResponseEntity.status(HttpStatus.FORBIDDEN).body((BaseRestResource) new EexceptionVo("Your authentication credentials are invalid."));
-			}
-		}
-		catch (ApiAuthException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
-		}
-
-		return forward(req, res, api);
 	}
 
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
