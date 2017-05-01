@@ -133,6 +133,44 @@ public class ApiController extends BaseController {
 		}
 	}
 
+    /**
+     * Update downstream uri of existing api
+     * @param jsonPayload
+     * @param res
+     * @return
+     * @throws IOException
+     */
+	@RequestMapping(method = RequestMethod.PATCH, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseBody
+	public ResponseEntity<BaseRestResource> updateApi(@RequestBody Map<String, Object> jsonPayload,
+			HttpServletResponse res) throws IOException {
+		try {
+			String name = (String) jsonPayload.get("name");
+			String reqUri = (String) jsonPayload.get("request_uri");
+			String downstreamUri = (String) jsonPayload.get("downstream_uri");
+
+			if (!isValid(name)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo("Api name is not provided."));
+			}
+			if (!isValid(reqUri)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo("Request uri is not provided."));
+			}
+			if (!isValid(downstreamUri)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo("Downstream uri is not provided."));
+			}
+
+			Api addApi = apiService.updateApi(name, reqUri, downstreamUri);
+			httpClient.addWebClient(downstreamUri);
+
+			ApiVo apiVo = ObjectsConverter.convertApiDomainToValue(addApi);
+			return new ResponseEntity<BaseRestResource>(apiVo, HttpStatus.CREATED);
+		} catch (ApiException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body((BaseRestResource) new EexceptionVo(e.getMessage()));
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((BaseRestResource) new EexceptionVo(e.getMessage()));
+		}
+	}
+
 	@RequestMapping(value = "/{api}/auths/{method}", method = RequestMethod.PATCH, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public ResponseEntity<BaseRestResource> addAuth(@PathVariable("api") String apiName,
