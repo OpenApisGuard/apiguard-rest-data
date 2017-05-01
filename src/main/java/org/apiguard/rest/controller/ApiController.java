@@ -13,6 +13,7 @@ import org.apiguard.service.exceptions.ApiException;
 import org.apiguard.valueobject.ApiVo;
 import org.apiguard.valueobject.BaseRestResource;
 import org.apiguard.valueobject.EexceptionVo;
+import org.apiguard.valueobject.MessageStringVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -127,7 +128,7 @@ public class ApiController extends BaseController {
 			ApiVo apiVo = ObjectsConverter.convertApiDomainToValue(addApi);
 			return new ResponseEntity<BaseRestResource>(apiVo, HttpStatus.CREATED);
 		} catch (ApiException e) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).body((BaseRestResource) new EexceptionVo(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
@@ -163,9 +164,30 @@ public class ApiController extends BaseController {
 			httpClient.addWebClient(downstreamUri);
 
 			ApiVo apiVo = ObjectsConverter.convertApiDomainToValue(addApi);
-			return new ResponseEntity<BaseRestResource>(apiVo, HttpStatus.CREATED);
+			return new ResponseEntity<BaseRestResource>(apiVo, HttpStatus.OK);
 		} catch (ApiException e) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).body((BaseRestResource) new EexceptionVo(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((BaseRestResource) new EexceptionVo(e.getMessage()));
+		}
+	}
+
+	@RequestMapping(value = "/{api}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseBody
+	public ResponseEntity<BaseRestResource> deleteApi(@PathVariable("api") String name,
+			HttpServletResponse res) throws IOException {
+		try {
+			if (!isValid(name)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo("Api name is not provided."));
+			}
+
+            HttpStatus status = HttpStatus.OK;
+			String msg = "API name: " + name + " deleted successfully";
+            apiService.deleteApi(name);
+
+            return ResponseEntity.status(status).body((BaseRestResource) new MessageStringVo(msg));
+		} catch (ApiException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
