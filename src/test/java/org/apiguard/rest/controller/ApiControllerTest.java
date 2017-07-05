@@ -1,3 +1,5 @@
+package org.apiguard.rest.controller;
+
 /*
  * Copyright 2017 the original author or authors.
  *
@@ -13,14 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apiguard.rest.service;
 
+import org.apiguard.cassandra.entity.ApiEntity;
+import org.apiguard.rest.service.AuthChecker;
+import org.apiguard.service.ApiService;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-public class AuthCheckerTest {
+@RunWith(PowerMockRunner.class)
+public class ApiControllerTest {
+
+    @Mock
+    private ApiService<ApiEntity> apiService;
+
+    @Mock
+    AuthChecker authChecker;
+
+    @InjectMocks
+    ApiController apiController;
 
     @Test
-    public void testBase64() {
-    }
+    public void test() {
 
+    }
 }

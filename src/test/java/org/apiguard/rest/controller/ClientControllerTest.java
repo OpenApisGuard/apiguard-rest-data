@@ -1,3 +1,5 @@
+package org.apiguard.rest.controller;
+
 /*
  * Copyright 2017 the original author or authors.
  *
@@ -13,14 +15,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apiguard.rest.service;
-
-import org.junit.Test;
-
-public class AuthCheckerTest {
-
-    @Test
-    public void testBase64() {
-    }
-
+public class ClientControllerTest {
 }

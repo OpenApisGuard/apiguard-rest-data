@@ -56,4 +56,22 @@ public class ObjectsConverter {
 				domain.getReqUri());
 	}
 
+	public static LdapAuthVo convertLdapAuthDomainToValue(LdapAuth domain) {
+		if (domain == null) {
+			return null;
+		}
+
+		return new LdapAuthVo(domain.getId(), DateTimeFormater.toString(domain.getCreationDate()), DateTimeFormater.toString(domain.getLastUpdateDate()),
+				domain.getClientId(), domain.getReqUri(), domain.getLdapUrl(), domain.getAdminDn(), domain.getAdminPassword(), domain.getUserBase(),
+				domain.getUserAttr(), domain.getCacheExpireInSecond());
+	}
+
+	public static JwtAuthVo convertJwtAuthDomainToValue(JwtAuth domain) {
+		if (domain == null) {
+			return null;
+		}
+
+		return new JwtAuthVo(domain.getId(), DateTimeFormater.toString(domain.getCreationDate()), DateTimeFormater.toString(domain.getLastUpdateDate()),
+				domain.getClientId(), domain.getReqUri(), domain.getIssuer(), domain.getSecret(), domain.isNotBefore(), domain.isExpires());
+	}
 }

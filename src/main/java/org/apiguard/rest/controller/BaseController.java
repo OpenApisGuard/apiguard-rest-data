@@ -1,13 +1,13 @@
 package org.apiguard.rest.controller;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
-
 import org.springframework.util.StringUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
 
 public class BaseController {
 
@@ -15,21 +15,52 @@ public class BaseController {
 		return !StringUtils.isEmpty(val);
 	}
 	
-	public String getResponse(HttpServletResponse res, Response resp) throws IOException {
-		res.setContentType(resp.getMediaType().toString());
-		ByteArrayOutputStream result = new ByteArrayOutputStream();
-		try {
-			byte[] buffer = new byte[1024];
-			int length;
-			while ((length = InputStream.class.cast(resp.getEntity()).read(buffer)) != -1) {
-			    result.write(buffer, 0, length);
-			}
-			
-			return result.toString("UTF-8");
-		}
-		finally {
-			result.close();
-		}
+//	public String getResponse(HttpServletResponse res, Response resp) throws IOException {
+//		res.setContentType(resp.getMediaType().toString());
+//		ByteArrayOutputStream result = new ByteArrayOutputStream();
+//		try {
+//			byte[] buffer = new byte[1024];
+//			int length;
+//			while ((length = InputStream.class.cast(resp.getEntity()).read(buffer)) != -1) {
+//			    result.write(buffer, 0, length);
+//			}
+//
+//			return result.toString("UTF-8");
+//		}
+//		finally {
+//			result.close();
+//		}
+//	}
+
+	public Date toDate(String dateStr) {
+
+		return null;
 	}
 
+	public HashMap<String, String> getHeaders(HttpServletRequest req) {
+		HashMap<String, String> res = null;
+		Enumeration<String> headerNames = req.getHeaderNames();
+		if (headerNames.hasMoreElements()) {
+			res = new HashMap<String, String>();
+			while (headerNames.hasMoreElements()) {
+				String h = headerNames.nextElement();
+                if (!h.equalsIgnoreCase("host")) {
+                    res.put(h, req.getHeader(h));
+                }
+			}
+		}
+		return res;
+	}
+
+	public String getContent(HttpServletRequest req) throws IOException {
+		StringBuffer sb = new StringBuffer();
+		String line = null;
+
+		BufferedReader reader = req.getReader();
+		while ((line = reader.readLine()) != null) {
+			sb.append(line);
+		}
+
+		return sb.toString();
+	}
 }

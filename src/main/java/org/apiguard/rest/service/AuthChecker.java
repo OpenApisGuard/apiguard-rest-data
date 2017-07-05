@@ -1,5 +1,7 @@
 package org.apiguard.rest.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apiguard.constants.AuthType;
 import org.apiguard.service.ApiAuthService;
 import org.apiguard.service.exceptions.ApiAuthException;
@@ -8,17 +10,14 @@ import org.springframework.http.HttpHeaders;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.DatatypeConverter;
-import java.util.Base64;
 
 public abstract class AuthChecker {
-
     public final static String CLIENT_ALIAS = "keyId";
     public final static String ALGORITHM = "algorithm";
     public final static String HEADERS = "headers";
     public final static String SIGNATURE = "signature";
 
-    @Autowired
-    ApiAuthService apiService;
+    private static final Logger log = LogManager.getLogger(AuthChecker.class);
 
     @Autowired
     ApiAuthService apiAuthService;
@@ -26,11 +25,12 @@ public abstract class AuthChecker {
     public boolean authenticate(String reqUri, HttpServletRequest req) throws ApiAuthException {
         String keyVal = req.getHeader(AuthType.KEY.getKey());
         if (keyVal != null) {
+            log.info("Validating auth using key auth: " + keyVal);
             return apiAuthService.keyAuthMatches(reqUri, keyVal);
         }
 
         //TODO: implement other auth
-        //oauth, jwt, ldap and hmac use Authorization header
+        //oauth, jwt, and hmac use Authorization header
         keyVal = req.getHeader(HttpHeaders.AUTHORIZATION);
 
         try {
@@ -39,13 +39,15 @@ public abstract class AuthChecker {
                 AuthType authType = AuthType.getAuthByKey(authid.toLowerCase());
 
                 if (authType == null) {
-                    throw new ApiAuthException("Invalid authorization type: " + authType);
+                    log.warn("Invalid authorization type: " + authType + " for reqUri: " + reqUri);
+                    throw new ApiAuthException("Invalid authorization type: " + authType + " for reqUri: " + reqUri);
                 }
+
+                log.debug("Validating authorization using auth type: " + authType + " for reqUri: " + reqUri);
 
                 switch (authType) {
                     case BASIC:
-                        String base64 = keyVal.substring(keyVal.lastIndexOf(" ") + 1);
-                        String credential = new String(DatatypeConverter.parseBase64Binary(base64)).replaceAll("\n", "");
+                        String credential = getCredentials(keyVal);
                         int ind = credential.indexOf(":");
                         return apiAuthService.basicAuthMatches(reqUri, credential.substring(0, ind), credential.substring(ind+1));
                     case DIGITAL_SIGNATURE:
@@ -53,9 +55,11 @@ public abstract class AuthChecker {
                     case HMAC:
                         break;
                     case JWT:
-                        break;
+                        return apiAuthService.jwtAuthMatches(getToken(keyVal));
                     case LDAP:
-                        break;
+                        String ldapCredential = getCredentials(keyVal);
+                        int cInd = ldapCredential.indexOf(":");
+                        return apiAuthService.ldapAuthMatches(reqUri, ldapCredential.substring(0, cInd), ldapCredential.substring(cInd+1));
                     case OAUTH2:
                         break;
                     case SIGNATURE:
@@ -69,7 +73,18 @@ public abstract class AuthChecker {
             return false;
         }
 
+        log.info("Authorization header is not found for reqUri: " + reqUri);
+
         return false;
+    }
+
+    private String getCredentials(String keyVal) {
+        String base64 = keyVal.substring(keyVal.lastIndexOf(" ") + 1);
+        return new String(DatatypeConverter.parseBase64Binary(base64)).replaceAll("\n", "");
+    }
+
+    private String getToken(String keyVal) {
+        return keyVal.substring(keyVal.lastIndexOf(" ") + 1);
     }
 
     public abstract boolean validateSignature(String reqUri, HttpServletRequest req) throws ApiAuthException;

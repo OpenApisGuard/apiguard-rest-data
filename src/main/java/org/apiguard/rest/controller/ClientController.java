@@ -25,6 +25,21 @@ import java.util.Map;
 @RequestMapping(value = "/clients")
 public class ClientController extends BaseController {
 
+	private static final String PARAM_REQUEST_URI = "request_uri";
+	private static final String PARAM_ID = "id";
+	private static final String PARAM_KEY = "key";
+	private static final String PARAM_PASSWORD = "password";
+	private static final String PARAM_CLIENT_ALIAS = "client_alias";
+	private static final String PARAM_SECRET = "secret";
+	private static final String PARAM_LDAP_URL = "ldap_url";
+	private static final String PARAM_ADMIN_DN = "admin_dn";
+	private static final String PARAM_ADMIN_PASSWORD = "admin_Password";
+	private static final String PARAM_USER_BASE = "user_base";
+	private static final String PARAM_USER_ATTR = "user_attribute";
+	private static final String PARAM_CACHE_EXPIRE_SEC = "cache_expire_seconds";
+	private static final String PARAM_VALID_NOT_BEFORE = "not_before";
+	private static final String PARAM_EXPIRES = "expires";
+
 	@Autowired
 	ApiService<ApiEntity> apiService;
 
@@ -63,7 +78,7 @@ public class ClientController extends BaseController {
 			HttpServletResponse res) throws IOException {
 		
 		try {
-			String id = (String) jsonPayload.get("id");
+			String id = (String) jsonPayload.get(PARAM_ID);
 			
 			if (!isValid(id)) {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -87,8 +102,8 @@ public class ClientController extends BaseController {
 			HttpServletResponse res) throws IOException {
 
 		try {
-			String key = (String) jsonPayload.get("key");
-			String reqUri = (String) jsonPayload.get("request_uri");
+			String key = (String) jsonPayload.get(PARAM_KEY);
+			String reqUri = (String) jsonPayload.get(PARAM_REQUEST_URI);
 
 			if (!isValid(clientId)) {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -107,7 +122,7 @@ public class ClientController extends BaseController {
 
 			ClientEntity client = clientService.getClient(clientId);
 			if (client == null) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(client + " is not configured."));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(clientId + " is not configured."));
 			}
 			
 			KeyAuthEntity keyAuth = apiAuthService.addKeyAuth(reqUri, clientId, key);
@@ -130,8 +145,8 @@ public class ClientController extends BaseController {
 			HttpServletResponse res) throws IOException {
 		
 		try {
-			String pwd = (String) jsonPayload.get("password");
-			String reqUri = (String) jsonPayload.get("request_uri");
+			String pwd = (String) jsonPayload.get(PARAM_PASSWORD);
+			String reqUri = (String) jsonPayload.get(PARAM_REQUEST_URI);
 			
 			if (!isValid(clientId)) {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -150,7 +165,7 @@ public class ClientController extends BaseController {
 			
 			ClientEntity client = clientService.getClient(clientId);
 			if (client == null) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(client + " is not configured."));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(clientId + " is not configured."));
 			}
 			
 			BasicAuthEntity basicAuth = apiAuthService.addBasicAuth(reqUri, clientId, pwd);
@@ -173,9 +188,9 @@ public class ClientController extends BaseController {
 			HttpServletResponse res) throws IOException {
 
 		try {
-			String clientAlias = (String) jsonPayload.get("client_alias");
-			String secret = (String) jsonPayload.get("secret");
-			String reqUri = (String) jsonPayload.get("request_uri");
+			String clientAlias = (String) jsonPayload.get(PARAM_CLIENT_ALIAS);
+			String secret = (String) jsonPayload.get(PARAM_SECRET);
+			String reqUri = (String) jsonPayload.get(PARAM_REQUEST_URI);
 
 			if (!isValid(clientId)) {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -200,7 +215,7 @@ public class ClientController extends BaseController {
 
 			ClientEntity client = clientService.getClient(clientId);
 			if (client == null) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(client + " is not configured."));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(clientId + " is not configured."));
 			}
 
             SignatureAuthEntity signatureAuth = apiAuthService.addHttpSignatureAuth(reqUri, clientId, clientAlias, secret);
@@ -216,4 +231,105 @@ public class ClientController extends BaseController {
 					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
 	}
+
+	@RequestMapping(value = "/{clientId}/ldap-auth", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseBody
+	public ResponseEntity<BaseRestResource> addLdapAuth(@PathVariable("clientId") String clientId, @RequestBody Map<String, Object> jsonPayload,
+														 HttpServletResponse res) throws IOException {
+		try {
+			String reqUri = (String) jsonPayload.get(PARAM_REQUEST_URI);
+			String ldapUrl = (String) jsonPayload.get(PARAM_LDAP_URL);
+			String adminDn = (String) jsonPayload.get(PARAM_ADMIN_DN);
+			String adminPwd = (String) jsonPayload.get(PARAM_ADMIN_PASSWORD);
+			String userBase = (String) jsonPayload.get(PARAM_USER_BASE);
+			String userAttr = (String) jsonPayload.get(PARAM_USER_ATTR);
+			Integer cacheExpireInSecond = (Integer) jsonPayload.get(PARAM_CACHE_EXPIRE_SEC);
+
+			if (!isValid(clientId)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body((BaseRestResource) new EexceptionVo("id is not provided."));
+			}
+
+			if (!isValid(reqUri)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body((BaseRestResource) new EexceptionVo("Request URI is not provided."));
+			}
+
+			if (!isValid(ldapUrl)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body((BaseRestResource) new EexceptionVo("LDAP url is not provided."));
+			}
+
+			if (!isValid(adminDn)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body((BaseRestResource) new EexceptionVo("Admin DN is not provided."));
+			}
+
+			if (!isValid(adminPwd)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body((BaseRestResource) new EexceptionVo("Admin password is not provided."));
+			}
+
+			if (!isValid(userBase)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body((BaseRestResource) new EexceptionVo("User base is not provided."));
+			}
+
+			ClientEntity client = clientService.getClient(clientId);
+			if (client == null) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(clientId + " is not configured."));
+			}
+
+			LdapAuthEntity ldapAuthEntity = apiAuthService.addLdapAuth(reqUri, clientId, ldapUrl, adminDn, adminPwd, userBase, userAttr, cacheExpireInSecond);
+
+			LdapAuthVo ldapAuthVo = ObjectsConverter.convertLdapAuthDomainToValue(ldapAuthEntity);
+			return new ResponseEntity<BaseRestResource>(ldapAuthVo, HttpStatus.CREATED);
+		}
+		catch (ApiAuthException ae) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(ae.getMessage()));
+		}
+		catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
+		}
+	}
+
+	@RequestMapping(value = "/{clientId}/jwt-auth", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseBody
+	public ResponseEntity<BaseRestResource> addJwtAuth(@PathVariable("clientId") String clientId, @RequestBody Map<String, Object> jsonPayload,
+														HttpServletResponse res) throws IOException {
+		try {
+			String reqUri = (String) jsonPayload.get(PARAM_REQUEST_URI);
+			Boolean notBefore = new Boolean((String) jsonPayload.get(PARAM_VALID_NOT_BEFORE));
+			Boolean expires = new Boolean((String) jsonPayload.get(PARAM_EXPIRES));
+
+			if (!isValid(clientId)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body((BaseRestResource) new EexceptionVo("id is not provided."));
+			}
+
+			if (!isValid(reqUri)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body((BaseRestResource) new EexceptionVo("Request URI is not provided."));
+			}
+
+			ClientEntity client = clientService.getClient(clientId);
+			if (client == null) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(clientId + " is not configured."));
+			}
+
+			JwtAuthEntity jwtAuthEntity = apiAuthService.addJwtAuth(reqUri, clientId, notBefore, expires);
+
+			JwtAuthVo jwtAuthVo = ObjectsConverter.convertJwtAuthDomainToValue(jwtAuthEntity);
+			return new ResponseEntity<BaseRestResource>(jwtAuthVo, HttpStatus.CREATED);
+		}
+		catch (ApiAuthException ae) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(ae.getMessage()));
+		}
+		catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
+		}
+	}
+
 }
