@@ -38,8 +38,9 @@ import java.util.Map;
  */
 
 @Controller
-@RequestMapping(value = "/clients")
+@RequestMapping(value = "/apiguard/clients")
 public class ClientController extends BaseController {
+	public static final String ADMIN_URL = "/apiguard/clients";
 
 	private static final String PARAM_REQUEST_URI = "request_uri";
 	private static final String PARAM_ID = "id";
