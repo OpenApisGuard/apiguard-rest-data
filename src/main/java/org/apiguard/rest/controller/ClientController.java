@@ -14,12 +14,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /*
  * Copyright 2017 the original author or authors.
@@ -44,18 +49,24 @@ public class ClientController extends BaseController {
 
 	private static final String PARAM_REQUEST_URI = "request_uri";
 	private static final String PARAM_ID = "id";
+	private static final String PARAM_EMAIL = "email";
+	private static final String PARAM_FIRST_NAME = "first_name";
+	private static final String PARAM_LAST_NAME = "last_name";
 	private static final String PARAM_KEY = "key";
 	private static final String PARAM_PASSWORD = "password";
 	private static final String PARAM_CLIENT_ALIAS = "client_alias";
 	private static final String PARAM_SECRET = "secret";
+	private static final String PARAM_PROXY_NAME = "proxy_name";
 	private static final String PARAM_LDAP_URL = "ldap_url";
 	private static final String PARAM_ADMIN_DN = "admin_dn";
-	private static final String PARAM_ADMIN_PASSWORD = "admin_Password";
+	private static final String PARAM_ADMIN_PASSWORD = "admin_password";
 	private static final String PARAM_USER_BASE = "user_base";
 	private static final String PARAM_USER_ATTR = "user_attribute";
 	private static final String PARAM_CACHE_EXPIRE_SEC = "cache_expire_seconds";
 	private static final String PARAM_VALID_NOT_BEFORE = "not_before";
 	private static final String PARAM_EXPIRES = "expires";
+
+	private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 
 	@Autowired
 	ApiService<ApiEntity> apiService;
@@ -67,9 +78,25 @@ public class ClientController extends BaseController {
 	@Autowired
 	ApiAuthService apiAuthService;
 
+	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseBody
+	public ResponseEntity getClients(HttpServletRequest req, HttpServletResponse res, @RequestParam(value = "p", required = false, defaultValue = "0") int page,
+													   @RequestParam(value = "c", required = false, defaultValue = "25") int count)
+			throws Exception {
+		try {
+			List<ClientEntity> clients = clientService.getClients(page, count);
+
+			List<ClientVo> clientVos = ObjectsConverter.convertClientListDomainToValue(clients);
+			return new ResponseEntity<List>(clientVos, HttpStatus.OK);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
+		}
+	}
+
 	@RequestMapping(value = "/{clientId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	public ResponseEntity<BaseRestResource> getClient(@PathVariable("clientId") String clientId, HttpServletRequest req, HttpServletResponse res)
+	public ResponseEntity<BaseRestResource> getClientById(@PathVariable("clientId") String clientId, HttpServletRequest req, HttpServletResponse res)
 			throws Exception {
 		try {
 			if (!isValid(clientId)) {
@@ -78,10 +105,11 @@ public class ClientController extends BaseController {
 			}
 
 			ClientEntity client = clientService.getClient(clientId);
-			ClientVo clientVo = null;
-			if (client != null) {
-				clientVo = ObjectsConverter.convertClientDomainToValue(client);
+			if (client == null) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body((BaseRestResource) new EexceptionVo("clientId is not found."));
 			}
+			ClientVo clientVo = ObjectsConverter.convertClientDomainToValue(client);
 			return new ResponseEntity<BaseRestResource>(clientVo, HttpStatus.OK);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -96,13 +124,21 @@ public class ClientController extends BaseController {
 		
 		try {
 			String id = (String) jsonPayload.get(PARAM_ID);
-			
+			String firstName = (String) jsonPayload.get(PARAM_FIRST_NAME);
+			String lastName = (String) jsonPayload.get(PARAM_LAST_NAME);
+			String email = (String) jsonPayload.get(PARAM_EMAIL);
+
+			if (! StringUtils.isEmpty(email) && clientService.existsEmail(email)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body((BaseRestResource) new EexceptionVo("Email: " + email + " is already in use by another account."));
+			}
+
 			if (!isValid(id)) {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 						.body((BaseRestResource) new EexceptionVo("id is not provided."));
 			}
 			
-			ClientEntity client = clientService.addClient(id);
+			ClientEntity client = clientService.addClient(id, email, firstName, lastName);
 			ClientVo clientVo = ObjectsConverter.convertClientDomainToValue(client);
 			return new ResponseEntity<BaseRestResource>(clientVo, HttpStatus.CREATED);
 		} catch (ClientException e) {
@@ -127,9 +163,9 @@ public class ClientController extends BaseController {
 						.body((BaseRestResource) new EexceptionVo("id is not provided."));
 			}
 
+			// auto generated key
 			if (!isValid(key)) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-						.body((BaseRestResource) new EexceptionVo("key is not provided."));
+				key = UUID.randomUUID().toString();
 			}
 
 			if (!isValid(reqUri)) {
@@ -208,6 +244,7 @@ public class ClientController extends BaseController {
 			String clientAlias = (String) jsonPayload.get(PARAM_CLIENT_ALIAS);
 			String secret = (String) jsonPayload.get(PARAM_SECRET);
 			String reqUri = (String) jsonPayload.get(PARAM_REQUEST_URI);
+			String proxyName = (String) jsonPayload.get(PARAM_PROXY_NAME);
 
 			if (!isValid(clientId)) {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -215,14 +252,11 @@ public class ClientController extends BaseController {
 			}
 			
 			if (!isValid(clientAlias)) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-						.body((BaseRestResource) new EexceptionVo("client alias is not provided."));
+				clientAlias = (isValid(proxyName)? proxyName : clientId) + "_" + SDF.format(new Timestamp(System.currentTimeMillis()));
 			}
 
-
 			if (!isValid(secret)) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-						.body((BaseRestResource) new EexceptionVo("secret is not provided."));
+				secret = UUID.randomUUID().toString();
 			}
 
 			if (!isValid(reqUri)) {

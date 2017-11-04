@@ -1,8 +1,13 @@
 package org.apiguard.rest.utils;
 
+import org.apiguard.cassandra.entity.ApiEntity;
+import org.apiguard.cassandra.entity.ClientEntity;
 import org.apiguard.commons.utils.DateTimeFormater;
 import org.apiguard.entity.*;
 import org.apiguard.valueobject.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /*
  * Copyright 2017 the original author or authors.
@@ -33,13 +38,38 @@ public class ObjectsConverter {
 				domain.isHmacAuth(), domain.isOAuth2Auth(), domain.isJwtAuth(), domain.isLdapAuth());
 	}
 
+	public static List<ApiVo> convertApiListDomainToValue(List<ApiEntity> domains) {
+		if (domains == null) {
+			return null;
+		}
+
+		List<ApiVo> res = new ArrayList<ApiVo>(domains.size());
+		for(ApiEntity c : domains) {
+			res.add(convertApiDomainToValue(c));
+		}
+		return res;
+	}
+
 	public static ClientVo convertClientDomainToValue(Client domain) {
 		if (domain == null) {
 			return null;
 		}
 
 		return new ClientVo(domain.getId(), DateTimeFormater.toString(domain.getCreationDate()),
-				DateTimeFormater.toString(domain.getLastUpdateDate()), domain.getClientId());
+				DateTimeFormater.toString(domain.getLastUpdateDate()), domain.getClientId(), domain.getEmail(),
+				domain.getFirstName(), domain.getLastName());
+	}
+
+	public static List<ClientVo> convertClientListDomainToValue(List<ClientEntity> domains) {
+		if (domains == null) {
+			return null;
+		}
+
+		List<ClientVo> res = new ArrayList<ClientVo>(domains.size());
+		for(ClientEntity c : domains) {
+			res.add(convertClientDomainToValue(c));
+		}
+		return res;
 	}
 
 	public static KeyAuthVo convertKeyAuthDomainToValue(KeyAuth domain) {
@@ -48,7 +78,7 @@ public class ObjectsConverter {
 		}
 
 		return new KeyAuthVo(domain.getId(), DateTimeFormater.toString(domain.getCreationDate()),
-				DateTimeFormater.toString(domain.getLastUpdateDate()), domain.getClientId(), domain.getKey(),
+				DateTimeFormater.toString(domain.getLastUpdateDate()), domain.getClientId(), domain.getDecryptedKey(),
 				domain.getReqUri());
 	}
 
@@ -68,7 +98,7 @@ public class ObjectsConverter {
 		}
 
 		return new SignatureAuthVo(domain.getId(), DateTimeFormater.toString(domain.getCreationDate()),
-				DateTimeFormater.toString(domain.getLastUpdateDate()), domain.getClientAlias(), domain.getClientId(), domain.getSecret(),
+				DateTimeFormater.toString(domain.getLastUpdateDate()), domain.getClientAlias(), domain.getClientId(), domain.getDecryptedSecret(),
 				domain.getReqUri());
 	}
 

@@ -17,8 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -62,6 +64,22 @@ public class AdminController extends BaseController {
 //	 List<ApiEntity> apis = cassandraService.getAllApis();
 //	 return apis;
 //	 }
+
+    @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity getApis(HttpServletRequest req, HttpServletResponse res, @RequestParam(value = "p", required = false, defaultValue = "0") int page,
+                                     @RequestParam(value = "c", required = false, defaultValue = "25") int count)
+            throws Exception {
+        try {
+            List<ApiEntity> apis = apiService.getAllApis();
+
+            List<ApiVo> apiVos = ObjectsConverter.convertApiListDomainToValue(apis);
+            return new ResponseEntity<List>(apiVos, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body((BaseRestResource) new EexceptionVo(e.getMessage()));
+        }
+    }
 
     @RequestMapping(method = RequestMethod.POST, value = "/health")
     @ResponseBody
