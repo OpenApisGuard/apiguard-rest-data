@@ -1,5 +1,7 @@
 package org.apiguard.rest.controller;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apiguard.cassandra.entity.*;
 import org.apiguard.rest.utils.ObjectsConverter;
 import org.apiguard.service.ApiAuthService;
@@ -68,6 +70,8 @@ public class ClientController extends BaseController {
 
 	private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 
+	private static final Logger log = LogManager.getLogger(ClientController.class);
+
 	@Autowired
 	ApiService<ApiEntity> apiService;
 
@@ -89,6 +93,7 @@ public class ClientController extends BaseController {
 			List<ClientVo> clientVos = ObjectsConverter.convertClientListDomainToValue(clients);
 			return new ResponseEntity<List>(clientVos, HttpStatus.OK);
 		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
@@ -112,6 +117,7 @@ public class ClientController extends BaseController {
 			ClientVo clientVo = ObjectsConverter.convertClientDomainToValue(client);
 			return new ResponseEntity<BaseRestResource>(clientVo, HttpStatus.OK);
 		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
@@ -142,8 +148,10 @@ public class ClientController extends BaseController {
 			ClientVo clientVo = ObjectsConverter.convertClientDomainToValue(client);
 			return new ResponseEntity<BaseRestResource>(clientVo, HttpStatus.CREATED);
 		} catch (ClientException e) {
+			log.info(e.getMessage());
 			return ResponseEntity.status(HttpStatus.CONFLICT).body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
@@ -183,10 +191,12 @@ public class ClientController extends BaseController {
 			KeyAuthVo keyAuthVo = ObjectsConverter.convertKeyAuthDomainToValue(keyAuth);
 			return new ResponseEntity<BaseRestResource>(keyAuthVo, HttpStatus.CREATED);
 		}
-		catch (ApiAuthException ae) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(ae.getMessage()));
+		catch (ApiAuthException e) {
+			log.info(e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
 		catch (Exception e) {
+			log.error(e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
@@ -226,10 +236,12 @@ public class ClientController extends BaseController {
 			BasicAuthVo basicAuthVo = ObjectsConverter.convertBasicAuthDomainToValue(basicAuth);
 			return new ResponseEntity<BaseRestResource>(basicAuthVo, HttpStatus.CREATED);
 		}
-		catch (ApiAuthException ae) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(ae.getMessage()));
+		catch (ApiAuthException e) {
+			log.info(e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
 		catch (Exception e) {
+			log.error(e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
@@ -274,10 +286,12 @@ public class ClientController extends BaseController {
             SignatureAuthVo signatureAuthVo = ObjectsConverter.convertSignatureAuthDomainToValue(signatureAuth);
             return new ResponseEntity<BaseRestResource>(signatureAuthVo, HttpStatus.CREATED);
 		}
-		catch (ApiAuthException ae) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(ae.getMessage()));
+		catch (ApiAuthException e) {
+			log.info(e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
 		catch (Exception e) {
+			log.error(e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
@@ -336,10 +350,12 @@ public class ClientController extends BaseController {
 			LdapAuthVo ldapAuthVo = ObjectsConverter.convertLdapAuthDomainToValue(ldapAuthEntity);
 			return new ResponseEntity<BaseRestResource>(ldapAuthVo, HttpStatus.CREATED);
 		}
-		catch (ApiAuthException ae) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(ae.getMessage()));
+		catch (ApiAuthException e) {
+			log.info(e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
 		catch (Exception e) {
+			log.error(e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
@@ -374,10 +390,12 @@ public class ClientController extends BaseController {
 			JwtAuthVo jwtAuthVo = ObjectsConverter.convertJwtAuthDomainToValue(jwtAuthEntity);
 			return new ResponseEntity<BaseRestResource>(jwtAuthVo, HttpStatus.CREATED);
 		}
-		catch (ApiAuthException ae) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(ae.getMessage()));
+		catch (ApiAuthException e) {
+			log.info(e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}
 		catch (Exception e) {
+			log.error(e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body((BaseRestResource) new EexceptionVo(e.getMessage()));
 		}

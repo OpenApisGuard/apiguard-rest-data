@@ -5,7 +5,6 @@ import org.springframework.util.StringUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 
@@ -29,28 +28,6 @@ public class BaseController {
 
 	public boolean isValid(String val) throws IOException {
 		return !StringUtils.isEmpty(val);
-	}
-	
-//	public String getResponse(HttpServletResponse res, Response resp) throws IOException {
-//		res.setContentType(resp.getMediaType().toString());
-//		ByteArrayOutputStream result = new ByteArrayOutputStream();
-//		try {
-//			byte[] buffer = new byte[1024];
-//			int length;
-//			while ((length = InputStream.class.cast(resp.getEntity()).read(buffer)) != -1) {
-//			    result.write(buffer, 0, length);
-//			}
-//
-//			return result.toString("UTF-8");
-//		}
-//		finally {
-//			result.close();
-//		}
-//	}
-
-	public Date toDate(String dateStr) {
-
-		return null;
 	}
 
 	public HashMap<String, String> getHeaders(HttpServletRequest req) {

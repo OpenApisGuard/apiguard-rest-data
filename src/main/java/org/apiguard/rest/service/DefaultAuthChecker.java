@@ -1,5 +1,7 @@
 package org.apiguard.rest.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apiguard.service.exceptions.ApiAuthException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,8 @@ import java.util.List;
 
 @Component
 public class DefaultAuthChecker extends AuthChecker {
+
+    private static final Logger log = LogManager.getLogger(DefaultAuthChecker.class);
 
     /**
      * Authorization:signature keyId="clientId:clientAlias",algorithm="hmac-sha256",headers="request date digest",signature="abc.."
@@ -108,6 +112,7 @@ public class DefaultAuthChecker extends AuthChecker {
             return apiAuthService.signatureAuthMatches(reqUri, clientId, clientAlias, algorithm, stringToSign, signature);
         }
         catch(Exception e) {
+            log.error(e.getMessage(), e);
             throw new ApiAuthException(e.getMessage(), e);
         }
     }

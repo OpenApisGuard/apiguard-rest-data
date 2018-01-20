@@ -1,5 +1,7 @@
 package org.apiguard.rest.controller;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apiguard.cassandra.entity.ApiEntity;
 import org.apiguard.constants.AuthType;
 import org.apiguard.entity.Api;
@@ -44,6 +46,8 @@ import java.util.Map;
 public class AdminController extends BaseController {
     public static final String ADMIN_URL = "/apiguard/apis";
 
+    private static final Logger log = LogManager.getLogger(AdminController.class);
+
     @Autowired
     private ApiService<ApiEntity> apiService;
 
@@ -76,6 +80,7 @@ public class AdminController extends BaseController {
             List<ApiVo> apiVos = ObjectsConverter.convertApiListDomainToValue(apis);
             return new ResponseEntity<List>(apiVos, HttpStatus.OK);
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body((BaseRestResource) new EexceptionVo(e.getMessage()));
         }
@@ -87,6 +92,7 @@ public class AdminController extends BaseController {
         try {
             return new ResponseEntity<BaseRestResource>(HttpStatus.OK);
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((BaseRestResource) new EexceptionVo(e.getMessage()));
         }
     }
@@ -114,8 +120,10 @@ public class AdminController extends BaseController {
             ApiVo apiVo = ObjectsConverter.convertApiDomainToValue(addApi);
             return new ResponseEntity<BaseRestResource>(apiVo, HttpStatus.CREATED);
         } catch (ApiException e) {
+            log.info(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((BaseRestResource) new EexceptionVo(e.getMessage()));
         }
     }
@@ -151,8 +159,10 @@ public class AdminController extends BaseController {
             ApiVo apiVo = ObjectsConverter.convertApiDomainToValue(addApi);
             return new ResponseEntity<BaseRestResource>(apiVo, HttpStatus.OK);
         } catch (ApiException e) {
+            log.info(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((BaseRestResource) new EexceptionVo(e.getMessage()));
         }
     }
@@ -172,8 +182,10 @@ public class AdminController extends BaseController {
 
             return ResponseEntity.status(status).body((BaseRestResource) new MessageStringVo(msg));
         } catch (ApiException e) {
+            log.info(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((BaseRestResource) new EexceptionVo(e.getMessage()));
         }
     }
@@ -198,8 +210,10 @@ public class AdminController extends BaseController {
 
             return new ResponseEntity<BaseRestResource>(apiVo, HttpStatus.OK);
         } catch (ApiException e) {
+            log.info(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((BaseRestResource) new EexceptionVo(e.getMessage()));
         }
     }

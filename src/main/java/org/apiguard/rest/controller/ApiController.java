@@ -1,9 +1,7 @@
 package org.apiguard.rest.controller;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.entity.ContentType;
-import org.apache.http.util.EntityUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apiguard.cassandra.entity.ApiEntity;
 import org.apiguard.entity.Api;
 import org.apiguard.http.ApiGuardApacheHttpClient;
@@ -14,9 +12,7 @@ import org.apiguard.service.exceptions.ApiAuthException;
 import org.apiguard.valueobject.BaseRestResource;
 import org.apiguard.valueobject.EexceptionVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,6 +41,8 @@ import java.io.IOException;
 @Controller
 @RequestMapping(value = "/")
 public class ApiController extends BaseController {
+    private static final Logger log = LogManager.getLogger(ApiController.class);
+
     @Autowired
     private ApiService<ApiEntity> apiService;
 
@@ -73,6 +71,7 @@ public class ApiController extends BaseController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Your authentication credentials are invalid.");
             }
         } catch (ApiAuthException e) {
+            log.info("Faied to auth because of bad credentials");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((BaseRestResource) new EexceptionVo(e.getMessage()));
         }
 
@@ -86,7 +85,7 @@ public class ApiController extends BaseController {
         //TODO: add option to pass headers or custom headers
 
         //TODO: add ftp support
-        HttpResponse resp = null;
+        ResponseEntity resp = null;
         if (method.equalsIgnoreCase(ApiGuardApacheHttpClient.METHOD_DELETE)) {
             resp = httpClient.delete(api.getDownstreamUri(), req.getQueryString(), getHeaders(req), getContent(req));
         }
@@ -100,22 +99,6 @@ public class ApiController extends BaseController {
             resp = httpClient.get(api.getDownstreamUri(), req.getQueryString(), getHeaders(req));
         }
 
-        HttpHeaders responseHeaders = new HttpHeaders();
-        HttpEntity entity = resp.getEntity();
-        String mimeType = "";
-        String respStr = "";
-        if (entity != null) {
-            ContentType contentType = ContentType.getOrDefault(entity);
-            mimeType = contentType.getMimeType();
-            responseHeaders.setContentType(MediaType.valueOf(mimeType));
-            respStr = EntityUtils.toString(entity);
-        }
-
-        if (mimeType.contains("pdf")) {
-            //TODO: support pdf later
-            return new ResponseEntity<String>(respStr, responseHeaders, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<String>(respStr, responseHeaders, HttpStatus.OK);
-        }
+        return resp;
     }
 }

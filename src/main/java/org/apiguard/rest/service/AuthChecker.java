@@ -86,6 +86,7 @@ public abstract class AuthChecker {
             }
         }
         catch(Exception e) {
+            log.error(e.getMessage(), e);
             return false;
         }
 
